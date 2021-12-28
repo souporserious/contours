@@ -1,0 +1,19 @@
+[package]
+name = "contours"
+version = "0.1.0"
+authors = ["Travis Arnold <you@example.com>"]
+description = "Generate contours from a 2D array."
+repository = "https://github.com/souporserious/contours"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+marching-squares = "0.1.1"
+normal_map = "0.2.1"
+opensimplex_noise_rs = "0.3.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_derive = "1.0.132"
+serde_json = "1.0.73"
+wasm-bindgen = { version = "0.2", features = ["serde-serialize"] }
