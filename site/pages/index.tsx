@@ -8,7 +8,7 @@ function generateIsoLines() {
   return JSON.parse(contoursModule.generate_iso_lines())
 }
 
-function tick(timestamp, resolve) {
+function tick(timestamp, resolve, pathElement) {
   if (start === undefined) {
     globalTime = performance.now()
     start = timestamp
@@ -18,7 +18,9 @@ function tick(timestamp, resolve) {
 
   if (previousTimeStamp !== timestamp) {
     localTime = performance.now()
-    contours.push(generateIsoLines())
+    const pathData = generateIsoLines()
+    pathElement.setAttribute('d', pathData)
+    contours.push(pathData)
     console.log(
       `Generated lines in ${(performance.now() - localTime).toFixed(2)}ms`
     )
@@ -26,26 +28,27 @@ function tick(timestamp, resolve) {
 
   if (elapsed < 1000) {
     previousTimeStamp = timestamp
-    requestAnimationFrame((timestamp) => tick(timestamp, resolve))
+    requestAnimationFrame((timestamp) => tick(timestamp, resolve, pathElement))
   } else {
     resolve()
   }
 }
 
-async function init() {
+async function init(pathElement: SVGPathElement) {
   if (contoursModule === null) {
     contoursModule = await import('contours')
   }
   return new Promise((resolve) => {
-    requestAnimationFrame((timestamp) => tick(timestamp, resolve))
+    requestAnimationFrame((timestamp) => tick(timestamp, resolve, pathElement))
   })
 }
 
 export default function Index() {
+  const ref = React.useRef(null)
   const [message, setMessage] = React.useState('Generating lines...')
 
-  React.useEffect(() => {
-    init().then(() => {
+  React.useLayoutEffect(() => {
+    init(ref.current).then(() => {
       console.log(contours)
       setMessage(
         `Generated ${contours.length} lines in ${(
@@ -65,6 +68,9 @@ export default function Index() {
       }}
     >
       <h1>{message}</h1>
+      <svg width="100%" height="100%" viewBox="0 0 100 100">
+        <path ref={ref} />
+      </svg>
     </div>
   )
 }
