@@ -9,21 +9,17 @@ pub fn generate_iso_lines() -> String {
     let noise_generator = OpenSimplexNoise::new(Some(1));
     let scale = 0.5;
 
-    let width = 1600_usize;
-    let height = 1600_usize;
+    let width = 100_usize;
+    let height = 100_usize;
     let n_steps = 10_usize;
-    let mut min_val = 0;
-    let mut max_val = 0;
 
-    let z_values = (0..height)
+    let data = (0..height)
         .map(|y| {
             (0..width)
                 .map(|x| {
                     let value = noise_generator.eval_2d(x as f64 * scale, y as f64 * scale);
-                    let normal_value = linear_map.normalize(value) as i16;
-                    min_val = min_val.min(normal_value);
-                    max_val = max_val.max(normal_value);
-                    normal_value
+                    let normal_value = linear_map.normalize(value) * 100.0;
+                    normal_value as i16
                 })
                 .collect::<Vec<i16>>()
         })
@@ -33,17 +29,16 @@ pub fn generate_iso_lines() -> String {
         dimensions: (width, height),
         top_left: Point { x: 0.0, y: 0.0 },
         pixel_size: (1.0, 1.0),
-        values: &z_values,
+        values: &data,
     };
 
-    let step_size = (max_val - min_val) as f32 / n_steps as f32;
+    // serde_json::to_string(&data).unwrap()
 
     let mut contours = Vec::new();
 
     for step in 0..n_steps {
-        let isoline_height = min_val as f32 + (step_size * step as f32);
         let contour = field
-            .get_contours(isoline_height as i16)
+            .get_contours(step as i16)
             .iter()
             .map(|line| {
                 line.clone()
@@ -57,6 +52,5 @@ pub fn generate_iso_lines() -> String {
         contours.push(contour);
     }
 
-    // Map to JSON
     serde_json::to_string(&contours).unwrap()
 }
